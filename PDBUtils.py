@@ -25,8 +25,9 @@ dumps_url = "https://dumps.wikimedia.org/backup-index.html"
 #########################################################################
 def download_file(url, output_dir):
    file_name = url.split('/')[-1]
+   file_path = os.path.abspath(os.path.join(output_dir,file_name))
    u = urllib2.urlopen(url)
-   f = open(os.path.join(output_dir, file_name), 'wb')
+   f = open(file_path, 'wb')
    meta = u.info()
    file_size = int(meta.getheaders("Content-Length")[0])
    print "Downloading '%s' Size: %s MB" % (file_name, Decimal(10*file_size/1024/1024)/10)
@@ -45,6 +46,7 @@ def download_file(url, output_dir):
        print status,
 
    f.close()
+   return file_path
 
 #########################################################################
 # \brief The page https://dumps.wikimedia.org/backup-index.html contains 
@@ -52,7 +54,11 @@ def download_file(url, output_dir):
 #        This functions extracts the url of the french wiktionary dump.
 # \author PaG
 #########################################################################
-def getLatestWiktionaryDump(wiki_lang, output_dir):
+def GetLatestWiktionaryDump(wiki_lang, output_dir):
+   if not os.path.exists(output_dir):
+      print "Error: output_dir argument: path does not exist"
+      return
+
    # Load the page containing th location of the wikis dump
    print 'Loading \''+dumps_url+'\''
    page = urllib.urlopen(dumps_url).read()
@@ -66,9 +72,14 @@ def getLatestWiktionaryDump(wiki_lang, output_dir):
 
    # Converts the relative link to absolute link
    abs_link_dump = urljoin(dumps_url, dump_link_found)
-   print 'Found one dump for \''+wikiname+'\' in \''+abs_link_dump+'\''
+   timestamp = abs_link_dump.split('/')[-1]
+   print '  found one dump for \''+wikiname+'\' (from '+timestamp[:4]+'/'+timestamp[4:6]+'/'+timestamp[6:8]+')'
    
    # Build the link of the wiki dump
-   timestamp = abs_link_dump.split('/')[-1]
    dump_url = 'https://dumps.wikimedia.org/frwiktionary/'+timestamp+'/frwiktionary-'+timestamp+'-all-titles.gz'   
-   download_file(dump_url, output_dir)
+   print 'Loading \''+abs_link_dump+'\''
+   print '  found the wiktionary entries file at:'
+   print '  '+dump_url
+   print 'Preparing the download of the wiktionary entries'
+   
+   return download_file(dump_url, output_dir)
