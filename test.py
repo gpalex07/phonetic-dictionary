@@ -47,8 +47,12 @@ def getH3SectionId(h3_section):
     h3_section_id = h3_section.findAll('span')[0].get('id')
     return h3_section_id
 
+def getH3SectionTitle(h3_section):
+    h3_section_title = h3_section.findAll('span')[0].text
+    return h3_section_title
+
 def isInterestingSectionId(h3_section):
-    interesting_section_ids = ['fr-nom', 'fr-adj']
+    interesting_section_ids = ['fr-nom', 'fr-adj', 'fr-flex-verb']
     h3_section_id = getH3SectionId(h3_section)
     #assert h3_section_id in interesting_section_ids, h3_section_id
     return h3_section_id in interesting_section_ids
@@ -64,6 +68,7 @@ def extractPhoneticFromParagraph(html_phonetic_paragraph):
     return search_res
 
 def extractPhoneticsInH3Section(h3_section):
+    print getH3SectionTitle(h3_section).upper()
     phonetics = []
     sibling = h3_section.findNextSibling()
     # there is sometimes an empty span after the H3 tag..
@@ -74,10 +79,12 @@ def extractPhoneticsInH3Section(h3_section):
         phonetic = extractPhoneticFromTable(sibling)
         phonetics = phonetics + phonetic
         sibling = sibling.findNextSibling()
+        print len(phonetic), 'transcriptions extracted in table'
     # anyways, the <p> tag contains a phonetic transcription
     if sibling.name == 'p':
         phonetic = extractPhoneticFromParagraph(sibling)
         phonetics = phonetics + phonetic
+        print len(phonetic), 'transcriptions extracted in paragraph'
     return phonetics
 
 def wikiParser(html):
@@ -117,4 +124,4 @@ page_html = pdbparser.getHtmlFromUrl(page_url)
 
 #phonetic = pdbparser.newFindPhoneticInHtml(page_html)
 phonetic = wikiParser(page_html)
-print phonetic
+print '\n', phonetic
